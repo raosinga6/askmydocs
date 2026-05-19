@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/raw/
+data/quarantine/
+*.parquet
+.DS_Store
+# Keep data/real/ tracked OR gitignore it depending on confidentiality
+data/real/
