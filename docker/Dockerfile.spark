@@ -1,0 +1,21 @@
+FROM python:3.11-slim-bookworm
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openjdk-17-jre-headless \
+        procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Direct path to the OpenJDK 17 install. On amd64 (Windows/Intel Mac) this is
+# java-17-openjdk-amd64; on arm64 (Apple Silicon) it's java-17-openjdk-arm64.
+# The TARGETARCH build arg lets Docker pick the right one automatically.
+ARG TARGETARCH
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${TARGETARCH}
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+RUN pip install --no-cache-dir \
+        pyspark==3.5.3 \
+        pyyaml \
+        jsonschema
+
+WORKDIR /app

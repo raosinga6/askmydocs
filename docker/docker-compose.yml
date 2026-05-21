@@ -1,0 +1,16 @@
+services:
+  spark:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.spark
+    image: askmydocs-spark:dev
+    working_dir: /app
+    volumes:
+      - ..:/app
+    environment:
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: "1"
+      SPARK_LOCAL_IP: 0.0.0.0
+    ports:
+      - "4040:4040"
+    command: ["bash"]
