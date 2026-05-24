@@ -1,8 +1,13 @@
 {
-  "schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DataDictionaryEntry",
   "type": "object",
-  "required": ["table_name", "overview", "input_tables", "fields"],
+  "required": [
+    "table_name",
+    "overview",
+    "input_tables",
+    "fields"
+  ],
   "additionalProperties": false,
   "properties": {
     "table_name": {
@@ -13,7 +18,11 @@
     },
     "overview": {
       "type": "object",
-      "required": ["purpose", "granularity", "business_rules"],
+      "required": [
+        "purpose",
+        "granularity",
+        "business_rules"
+      ],
       "additionalProperties": false,
       "properties": {
         "purpose": {
@@ -53,7 +62,12 @@
       "maxItems": 60,
       "items": {
         "type": "object",
-        "required": ["name", "description", "source", "technical_description"],
+        "required": [
+          "name",
+          "description",
+          "source",
+          "technical_description"
+        ],
         "additionalProperties": false,
         "properties": {
           "name": {
