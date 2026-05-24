@@ -8,4 +8,4 @@ data/quarantine/
 .DS_Store
 # Keep data/real/ tracked OR gitignore it depending on confidentiality
 data/real/
-scripts/.gemini_cache.json
+scripts/.gemini_cache.jsonscripts/.gemini_cache.json
