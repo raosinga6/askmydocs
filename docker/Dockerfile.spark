@@ -16,6 +16,9 @@ ENV PATH=$JAVA_HOME/bin:$PATH
 RUN pip install --no-cache-dir \
         pyspark==3.5.3 \
         pyyaml \
-        jsonschema
+        jsonschema \
+        pytest \
+        networkx \
+        matplotlib
 
 WORKDIR /app

@@ -1,0 +1,26 @@
+name: data_platform_lab
+version: 1.0.0
+config-version: 2
+
+profile: data_platform_lab
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+
+models:
+  data_platform_lab:
+    staging:
+      +schema: staging
+    marts:
+      +schema: marts
+
+seeds:
+  data_platform_lab:
+    events:
+      +schema: raw
+      +column_types:
+        event_id: text
+        event_type: text
+        occurred_at: timestamp_tz
+        user_id: text
