@@ -26,6 +26,8 @@ def get_spark(app_name: str = "askmydocs-local") -> SparkSession:
         # reachable from the host machine via the published port.
         .config("spark.driver.bindAddress", "0.0.0.0")
         .config("spark.driver.host", "localhost")
+        .config("spark.sql.adaptive.skewJoin.enabled", "true")
+        .config("spark.sql.adaptive.advisoryPartitionSizeInBytes", "64m")
         .getOrCreate()
     )
 

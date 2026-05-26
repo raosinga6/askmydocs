@@ -7,3 +7,6 @@ data/quarantine/
 *.parquet
 .DS_Store
 data/real/
+data/raw_10x/
+data/parquet_10x_*/
+data/perf_results_*.json
