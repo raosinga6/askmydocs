@@ -28,8 +28,10 @@ from pyspark.sql.types import (
 
 from spark_jobs.spark_session import get_spark
 
-RAW_DIR = Path("/app/data/raw")
-OUT_DIR = Path("/app/data/parquet")
+import os
+
+RAW_DIR = Path(os.environ.get("ASKMYDOCS_RAW_DIR", "/app/data/raw"))
+OUT_DIR = Path(os.environ.get("ASKMYDOCS_OUT_DIR", "/app/data/parquet"))
 CATALOG_OUT = OUT_DIR / "catalog"
 QUARANTINE_OUT = OUT_DIR / "quarantine"
 DQ_REPORT_OUT = OUT_DIR / "dq_report"

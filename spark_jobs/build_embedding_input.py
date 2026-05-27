@@ -30,10 +30,11 @@ from spark_jobs.embedding_input import (
     infer_business_domain,
 )
 from spark_jobs.spark_session import get_spark
+import os 
 
-CATALOG_IN = Path("/app/data/parquet/catalog")
-LINEAGE_IN = Path("/app/data/parquet/table_lineage")
-OUT_DIR = Path("/app/data/parquet/embedding_input")
+CATALOG_IN = Path(os.environ.get("ASKMYDOCS_CATALOG_IN", "/app/data/parquet/catalog"))
+LINEAGE_IN = Path(os.environ.get("ASKMYDOCS_TABLE_LINEAGE_IN", "/app/data/parquet/table_lineage"))
+OUT_DIR = Path(os.environ.get("ASKMYDOCS_EMBEDDING_OUT", "/app/data/parquet/embedding_input"))
 
 
 METADATA_SCHEMA = StructType([

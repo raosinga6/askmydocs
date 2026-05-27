@@ -28,9 +28,10 @@ from spark_jobs.lineage_parsers import (
 )
 from spark_jobs.spark_session import get_spark
 
-CATALOG_IN = Path("/app/data/parquet/catalog")
-TABLE_LINEAGE_OUT = Path("/app/data/parquet/table_lineage")
-FIELD_LINEAGE_OUT = Path("/app/data/parquet/field_lineage")
+import os
+CATALOG_IN = Path(os.environ.get("ASKMYDOCS_CATALOG_IN", "/app/data/parquet/catalog"))
+TABLE_LINEAGE_OUT = Path(os.environ.get("ASKMYDOCS_TABLE_LINEAGE_OUT", "/app/data/parquet/table_lineage"))
+FIELD_LINEAGE_OUT = Path(os.environ.get("ASKMYDOCS_FIELD_LINEAGE_OUT", "/app/data/parquet/field_lineage"))
 
 
 # UDF return schemas.
