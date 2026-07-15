@@ -11,6 +11,8 @@ services:
       PYTHONPATH: /app
       PYTHONUNBUFFERED: "1"
       SPARK_LOCAL_IP: 0.0.0.0
+      # For build_embeddings: sourced from the host env or repo .env
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports:
       - "4040:4040"
     command: ["bash"]

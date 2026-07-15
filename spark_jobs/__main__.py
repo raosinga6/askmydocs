@@ -19,6 +19,7 @@ JOBS = {
     "ingest_catalog": "spark_jobs.ingest_catalog",
     "extract_lineage": "spark_jobs.extract_lineage",
     "build_embedding_input": "spark_jobs.build_embedding_input",
+    "build_embeddings": "spark_jobs.build_embeddings",
 }
 
 

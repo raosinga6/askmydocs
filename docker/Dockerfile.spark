@@ -19,6 +19,10 @@ RUN pip install --no-cache-dir \
         jsonschema \
         pytest \
         networkx \
-        matplotlib
+        matplotlib \
+        numpy \
+        pyarrow \
+        google-genai \
+        python-dotenv
 
 WORKDIR /app
