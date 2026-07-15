@@ -119,16 +119,32 @@ def purpose_of(blob: str, max_len: int = 300) -> str:
     return blob[:max_len]
 
 
+def exact_name_mentions(query: str) -> list[int]:
+    """Indices of tables whose exact name appears as a token in the query.
+
+    Semantic embeddings are unreliable for exact identifiers, so a question
+    like "explain orders_base_007" must deterministically include that entry.
+    """
+    import re
+
+    tokens = set(re.findall(r"[a-z][a-z0-9_]{2,}", query.lower()))
+    return [CORPUS.by_name[n] for n in tokens if n in CORPUS.by_name]
+
+
 def retrieve(query: str, top_k: int) -> list[dict]:
+    pinned = exact_name_mentions(query)
     hits = cosine_top_k(embed_query(query), CORPUS.matrix, top_k)
+    # pinned exact-name matches first, then semantic hits (deduped), cap top_k
+    ordered = pinned + [i for i, _ in hits if i not in pinned]
+    scores = {i: s for i, s in hits}
     return [
         {
             "table_name": CORPUS.names[i],
             "business_domain": CORPUS.domains[i],
-            "score": round(score, 4),
+            "score": scores.get(i, 1.0),  # 1.0 marks an exact name match
             "purpose": purpose_of(CORPUS.blobs[i]),
         }
-        for i, score in hits
+        for i in ordered[:top_k]
     ]
 
 
@@ -151,6 +167,9 @@ Rules:
 - Ground every claim in the provided entries; cite table names in backticks.
 - If the entries don't contain the answer, say exactly what's missing — never invent \
 tables, columns, or joins.
+- If the question names a specific table and no entry has that exact name, open by \
+stating clearly that no table with that name exists in the catalog, then suggest the \
+closest entries by name and purpose.
 - Prefer concrete guidance: which table to use, its grain, relevant columns, join keys.
 - Keep it under 250 words.
 
