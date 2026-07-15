@@ -25,12 +25,15 @@ DEFAULT_EMBEDDINGS_DIR = REPO / "data" / "parquet" / "embeddings"
 
 
 def embed_query(text: str, model: str, dims: int) -> list[float]:
-    from dotenv import load_dotenv
     from google import genai
     from google.genai import types
 
-    load_dotenv()
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    from spark_jobs.embeddings_core import resolve_gemini_api_key
+
+    api_key = resolve_gemini_api_key()
+    if not api_key:
+        sys.exit("GEMINI_API_KEY not set (checked env and .env)")
+    client = genai.Client(api_key=api_key)
     resp = client.models.embed_content(
         model=model,
         contents=text,

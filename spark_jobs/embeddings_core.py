@@ -20,6 +20,23 @@ from pathlib import Path
 MAX_EMBED_CHARS = 8000
 
 
+def resolve_gemini_api_key() -> str | None:
+    """GEMINI_API_KEY from the environment, falling back to .env.
+
+    docker-compose passes the variable through as an *empty string* when the
+    host shell doesn't export it, and load_dotenv() never overrides an
+    existing env var — even an empty one. So: treat empty as unset and let
+    the repo .env win in that case.
+    """
+    from dotenv import load_dotenv
+
+    key = os.environ.get("GEMINI_API_KEY")
+    if not key:
+        load_dotenv(override=True)
+        key = os.environ.get("GEMINI_API_KEY")
+    return key or None
+
+
 def content_key(model: str, dims: int, task_type: str, text: str) -> str:
     """Stable cache key: same (model, dims, task, text) -> same embedding."""
     h = hashlib.sha256()

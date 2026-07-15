@@ -37,6 +37,7 @@ from spark_jobs.embeddings_core import (
     content_key,
     l2_normalize,
     load_cache,
+    resolve_gemini_api_key,
     save_cache,
     truncate_for_embedding,
 )
@@ -73,11 +74,9 @@ class EmbeddingContractViolation(Exception):
 
 
 def make_client():
-    from dotenv import load_dotenv
     from google import genai
 
-    load_dotenv()
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = resolve_gemini_api_key()
     if not api_key:
         raise EmbeddingContractViolation(
             "GEMINI_API_KEY not set (checked env and .env)")
