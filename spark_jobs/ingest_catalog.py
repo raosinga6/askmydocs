@@ -185,14 +185,23 @@ def write_dq_report(spark: SparkSession, parsed: DataFrame, file_count: int) -> 
 
 
 def enforce_dq_contract(report: dict) -> None:
-    """Apply the aggregate-level halt rules from dq_contract.md."""
+    """Apply the aggregate-level halt rules from dq_contract.md.
+
+    Thresholds default to the 500-file dev corpus but are env-tunable so a
+    real-only corpus (e.g. after scripts/clean_synthetic.py) can still pass:
+    ASKMYDOCS_DQ_MIN_FILES, ASKMYDOCS_DQ_MAX_REJECT_RATE, ASKMYDOCS_DQ_MIN_NAMESPACES.
+    """
+    min_files = int(os.environ.get("ASKMYDOCS_DQ_MIN_FILES", "400"))
+    max_reject_rate = float(os.environ.get("ASKMYDOCS_DQ_MAX_REJECT_RATE", "0.05"))
+
     violations: list[str] = []
 
-    if report["file_count"] < 400:
-        violations.append(f"file_count {report['file_count']} < 400")
+    if report["file_count"] < min_files:
+        violations.append(f"file_count {report['file_count']} < {min_files}")
 
-    if report["rejection_rate"] > 0.05:
-        violations.append(f"rejection_rate {report['rejection_rate']:.2%} > 5%")
+    if report["rejection_rate"] > max_reject_rate:
+        violations.append(
+            f"rejection_rate {report['rejection_rate']:.2%} > {max_reject_rate:.0%}")
 
     if report["rejection_breakdown"]:
         top_reason = report["rejection_breakdown"][0]
@@ -202,9 +211,11 @@ def enforce_dq_contract(report: dict) -> None:
                 f"{top_reason['count']}/{report['bad_count']} rejections (>50%)"
             )
 
-    if report["distinct_input_namespaces"] < 2:
+    min_namespaces = int(os.environ.get("ASKMYDOCS_DQ_MIN_NAMESPACES", "2"))
+    if report["distinct_input_namespaces"] < min_namespaces:
         violations.append(
-            f"distinct input namespaces {report['distinct_input_namespaces']} < 2 (catalog too narrow)"
+            f"distinct input namespaces {report['distinct_input_namespaces']} "
+            f"< {min_namespaces} (catalog too narrow)"
         )
 
     if violations:

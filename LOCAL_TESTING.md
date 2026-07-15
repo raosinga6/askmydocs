@@ -136,6 +136,27 @@ uv run python scripts/search_catalog.py "which table tracks cash on delivery col
 each with a purpose snippet. Try your own logistics questions (PETS tickets,
 recovery facilities, delivery attempts, hub sweeps).
 
+## 5b. Web UI — ask questions in the browser
+
+```bash
+uv run python -m serve        # → http://localhost:8008
+```
+
+**Expect:** header shows `500 tables · retrieval: gemini-embedding-001 (768d)`.
+Type a question (e.g. "how to get active orders") in **Ask** mode → a grounded
+answer citing table names, with source cards below (click a card for the full
+dictionary entry). **Search** mode skips answer generation and just ranks tables.
+Answers take ~10–20 s; retrieval-only is ~1 s.
+
+## 5c. Optional: real-data-only corpus
+
+```bash
+uv run python scripts/clean_synthetic.py           # dry-run: lists synthetic YAMLs
+uv run python scripts/clean_synthetic.py --apply   # delete them from data/raw
+export ASKMYDOCS_DQ_MIN_FILES=1 ASKMYDOCS_DQ_MIN_NAMESPACES=1
+# re-run steps 3-4; the DQ gates resize to the small real corpus
+```
+
 ## 6. Run the full test suite
 
 ```bash

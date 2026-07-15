@@ -46,10 +46,13 @@ AskMyDocs is a **RAG (Retrieval-Augmented Generation) service over a logistics d
    └──────────────────────────────────────────────────────────┘
                      │
                      ▼
-   scripts/search_catalog.py  — cosine top-k semantic search
-                     │
-                     ▼
-        RAG answer generation + serving API (upcoming)
+   ┌─ 5. serve (web UI + API) ──────────────────────────────┐
+   │  FastAPI · python -m serve · http://localhost:8008        │
+   │  /api/search — cosine top-k retrieval                     │
+   │  /api/ask    — Gemini answer grounded ONLY in retrieved   │
+   │                entries, with cited sources                │
+   └──────────────────────────────────────────────────────────┘
+   (CLI alternative: scripts/search_catalog.py)
 ```
 
 Each stage reads only the previous stage's Parquet, so any stage can be re-run in isolation. Contracts for each hop are documented in-repo: [`spark_jobs/dq_contract.md`](spark_jobs/dq_contract.md), [`spark_jobs/LINEAGE_SCHEMAS.md`](spark_jobs/LINEAGE_SCHEMAS.md), [`spark_jobs/EMBEDDING_INPUT.md`](spark_jobs/EMBEDDING_INPUT.md).
@@ -96,6 +99,22 @@ uv run python scripts/search_catalog.py "which table tracks COD collections?" --
 ```
 
 Embedding contract, model config, and the no-vector-DB rationale are in [`spark_jobs/EMBEDDINGS.md`](spark_jobs/EMBEDDINGS.md). API responses are cached in `data/.embedding_cache.json`, so re-runs only embed changed blobs.
+
+Or use the web UI — search + grounded Q&A over the catalog:
+
+```bash
+uv run python -m serve        # → http://localhost:8008
+```
+
+To strip the synthetic catalog and keep only real dictionaries (e.g. before
+an internal production run):
+
+```bash
+uv run python scripts/clean_synthetic.py           # dry-run
+uv run python scripts/clean_synthetic.py --apply   # delete synthetic YAMLs
+export ASKMYDOCS_DQ_MIN_FILES=1 ASKMYDOCS_DQ_MIN_NAMESPACES=1   # resize DQ gates
+# then re-run the pipeline stages
+```
 
 The first `./run` builds the `askmydocs-spark:dev` image (~1 min warm, longer cold — pyspark is a 300 MB wheel).
 

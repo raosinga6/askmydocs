@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "askmydocs-ui",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "-m", "serve"],
+      "cwd": "/Volumes/Software/askmydocs",
+      "port": 8008
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AskMyDocs</title>
+<style>
+  :root {
+    --bg: #0f1419; --panel: #1a2129; --border: #2c3742;
+    --text: #e6edf3; --muted: #8b98a5; --accent: #4fa3ff; --good: #3fb950;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font: 15px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif;
+         background: var(--bg); color: var(--text); min-height: 100vh; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 22px; letter-spacing: .3px; }
+  h1 .dim { color: var(--muted); font-weight: 400; }
+  #meta { color: var(--muted); font-size: 13px; margin: 4px 0 24px; }
+  .bar { display: flex; gap: 8px; }
+  input[type=text] { flex: 1; padding: 12px 14px; font-size: 15px; color: var(--text);
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px; outline: none; }
+  input[type=text]:focus { border-color: var(--accent); }
+  button { padding: 12px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #06121f; }
+  button:disabled { opacity: .5; cursor: wait; }
+  .modes { margin: 14px 0 6px; display: flex; gap: 16px; font-size: 13px; color: var(--muted); }
+  .modes label { cursor: pointer; }
+  #status { color: var(--muted); font-size: 13px; margin: 16px 0; min-height: 18px; }
+  .answer { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--good);
+    border-radius: 8px; padding: 16px 18px; margin: 14px 0 22px; white-space: pre-wrap; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
+  .card:hover { border-color: var(--accent); }
+  .card .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .card .name { font-weight: 600; color: var(--accent); font-family: ui-monospace, monospace; font-size: 14px; }
+  .card .domain { font-size: 12px; color: var(--muted); }
+  .card .score { margin-left: auto; font-size: 12px; color: var(--good); font-family: ui-monospace, monospace; }
+  .card .purpose { margin-top: 6px; color: var(--text); font-size: 14px; }
+  .card pre { display: none; margin-top: 12px; padding: 12px; background: var(--bg);
+    border-radius: 6px; font-size: 12.5px; overflow-x: auto; white-space: pre-wrap; color: var(--muted); }
+  .card.open pre { display: block; }
+  .srcs-label { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 8px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>AskMyDocs <span class="dim">— logistics data catalog</span></h1>
+  <div id="meta">loading corpus info…</div>
+
+  <div class="bar">
+    <input id="q" type="text" placeholder="e.g. which table tracks cash-on-delivery collections?" autofocus>
+    <button id="go" class="primary">Ask</button>
+  </div>
+  <div class="modes">
+    <label><input type="radio" name="mode" value="ask" checked> Ask (grounded answer + sources)</label>
+    <label><input type="radio" name="mode" value="search"> Search (retrieval only)</label>
+  </div>
+
+  <div id="status"></div>
+  <div id="out"></div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => s.replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+fetch('/api/health').then(r => r.json()).then(h => {
+  $('#meta').textContent =
+    `${h.tables} tables · retrieval: ${h.embedding_model} (${h.dims}d) · answers: ${h.answer_model}`;
+}).catch(() => { $('#meta').textContent = 'health check failed'; });
+
+function card(s) {
+  return `<div class="card" data-name="${esc(s.table_name)}">
+    <div class="head">
+      <span class="name">${esc(s.table_name)}</span>
+      <span class="domain">${esc(s.business_domain)}</span>
+      <span class="score">${s.score.toFixed(3)}</span>
+    </div>
+    <div class="purpose">${esc(s.purpose)}</div>
+    <pre></pre>
+  </div>`;
+}
+
+async function run() {
+  const q = $('#q').value.trim();
+  if (q.length < 2) return;
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  $('#go').disabled = true;
+  $('#status').textContent = mode === 'ask' ? 'retrieving + generating…' : 'retrieving…';
+  $('#out').innerHTML = '';
+  try {
+    const r = await fetch(`/api/${mode}`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(mode === 'ask' ? {question: q} : {query: q}),
+    });
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    const data = await r.json();
+    let html = '';
+    if (mode === 'ask') {
+      html += `<div class="answer">${esc(data.answer)}</div><div class="srcs-label">Sources</div>`;
+      html += data.sources.map(card).join('');
+    } else {
+      html += data.results.map(card).join('');
+    }
+    $('#out').innerHTML = html;
+    $('#status').textContent = '';
+  } catch (e) {
+    $('#status').textContent = 'error: ' + e.message;
+  } finally {
+    $('#go').disabled = false;
+  }
+}
+
+$('#go').addEventListener('click', run);
+$('#q').addEventListener('keydown', (e) => { if (e.key === 'Enter') run(); });
+
+// click a card to load + toggle the full dictionary entry
+$('#out').addEventListener('click', async (e) => {
+  const el = e.target.closest('.card');
+  if (!el) return;
+  const pre = el.querySelector('pre');
+  if (!pre.textContent) {
+    const r = await fetch(`/api/table/${encodeURIComponent(el.dataset.name)}`);
+    pre.textContent = (await r.json()).text_blob;
+  }
+  el.classList.toggle('open');
+});
+</script>
+</body>
+</html>
