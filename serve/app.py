@@ -43,6 +43,13 @@ INDEX_HTML = (Path(__file__).parent / "index.html").read_text(encoding="utf-8")
 
 app = FastAPI(title="AskMyDocs")
 
+# Allow the UI to call the API when index.html is opened directly from disk
+# (origin "null") instead of being served by us. Local tool — permissive is fine.
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+app.add_middleware(
+    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
 # --- corpus, loaded once at startup -----------------------------------------
 
 class Corpus:

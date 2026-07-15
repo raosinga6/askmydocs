@@ -62,10 +62,14 @@
 </div>
 
 <script>
+// Served normally, API calls are same-origin. If someone opens this file
+// directly (file:// or a raw-file preview), relative fetch URLs can't parse —
+// fall back to the default local server address.
+const API = location.protocol.startsWith('http') ? '' : 'http://localhost:8008';
 const $ = (s) => document.querySelector(s);
 const esc = (s) => s.replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-fetch('/api/health').then(r => r.json()).then(h => {
+fetch(`${API}/api/health`).then(r => r.json()).then(h => {
   $('#meta').textContent =
     `${h.tables} tables · retrieval: ${h.embedding_model} (${h.dims}d) · answers: ${h.answer_model}`;
 }).catch(() => { $('#meta').textContent = 'health check failed'; });
@@ -90,7 +94,7 @@ async function run() {
   $('#status').textContent = mode === 'ask' ? 'retrieving + generating…' : 'retrieving…';
   $('#out').innerHTML = '';
   try {
-    const r = await fetch(`/api/${mode}`, {
+    const r = await fetch(`${API}/api/${mode}`, {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(mode === 'ask' ? {question: q} : {query: q}),
     });
@@ -121,7 +125,7 @@ $('#out').addEventListener('click', async (e) => {
   if (!el) return;
   const pre = el.querySelector('pre');
   if (!pre.textContent) {
-    const r = await fetch(`/api/table/${encodeURIComponent(el.dataset.name)}`);
+    const r = await fetch(`${API}/api/table/${encodeURIComponent(el.dataset.name)}`);
     pre.textContent = (await r.json()).text_blob;
   }
   el.classList.toggle('open');
