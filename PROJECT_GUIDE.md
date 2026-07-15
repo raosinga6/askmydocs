@@ -137,7 +137,32 @@ uv run python scripts/compare_perf.py        # before/after table
 
 See [`spark_jobs/PERF_NOTES.md`](spark_jobs/PERF_NOTES.md) for the 10×-scale (5,000-file) methodology.
 
-### 6. Production image
+### 6. Single-click deployment (any cloud / VM with Docker)
+
+The all-in-one product image bootstraps itself: on start it runs whichever
+pipeline stages haven't produced output yet (ingest → lineage →
+embedding_input → embeddings), then serves the UI. Restarts skip completed
+stages; `FORCE_REBUILD=1` redoes everything.
+
+```bash
+export GEMINI_API_KEY=...            # or: set -a && source .env && set +a
+docker compose -f docker/docker-compose.prod.yml up -d
+# → http://localhost:8008 (first run ~3-5 min; restarts are instant)
+```
+
+Point it at your own dictionaries with `ASKMYDOCS_YAML_DIR=/path/to/yamls`
+(defaults to the repo's demo catalog). Pipeline state persists in the
+`askmydocs_state` volume. GitHub Actions publishes
+`ghcr.io/raosinga6/askmydocs:latest` on every master push, so a server never
+needs the repo:
+
+```bash
+docker run -d -p 8008:8008 -e GEMINI_API_KEY=... \
+  -v /path/to/yamls:/data/raw:ro -v askmydocs_state:/data/parquet \
+  ghcr.io/raosinga6/askmydocs:latest
+```
+
+### 7. Spark-jobs-only production image
 
 ```bash
 docker build -f docker/Dockerfile.spark.prod -t askmydocs-spark:prod .

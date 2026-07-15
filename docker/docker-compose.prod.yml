@@ -1,0 +1,30 @@
+# Single-click deployment: pipeline + embeddings + UI in one container.
+#
+#   GEMINI_API_KEY=xxx docker compose -f docker/docker-compose.prod.yml up
+#   → http://localhost:8008
+#
+# Point ASKMYDOCS_YAML_DIR at your own dictionary YAMLs (defaults to the
+# repo's demo catalog in ../data/raw). Pipeline outputs persist in the
+# askmydocs_state volume; restarting skips completed stages.
+services:
+  askmydocs:
+    image: ghcr.io/raosinga6/askmydocs:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.app
+    ports:
+      - "${ASKMYDOCS_PORT:-8008}:8008"
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?set GEMINI_API_KEY in the environment}
+      # Product defaults: don't fail-closed on small customer corpora.
+      # Raise these when you want the dev-corpus DQ gates.
+      ASKMYDOCS_DQ_MIN_FILES: ${ASKMYDOCS_DQ_MIN_FILES:-1}
+      ASKMYDOCS_DQ_MIN_NAMESPACES: ${ASKMYDOCS_DQ_MIN_NAMESPACES:-1}
+      FORCE_REBUILD: ${FORCE_REBUILD:-}
+    volumes:
+      - ${ASKMYDOCS_YAML_DIR:-../data/raw}:/data/raw:ro
+      - askmydocs_state:/data/parquet
+    restart: unless-stopped
+
+volumes:
+  askmydocs_state:

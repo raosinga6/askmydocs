@@ -1,0 +1,11 @@
+# Runtime deps for the all-in-one product image (docker/Dockerfile.app).
+# Pins match the versions verified in local development (uv.lock).
+pyspark==3.5.3
+pyyaml==6.0.2
+jsonschema==4.23.0
+google-genai==2.4.0
+python-dotenv==1.2.2
+numpy==2.5.1
+pyarrow==25.0.0
+fastapi==0.139.0
+uvicorn==0.51.0

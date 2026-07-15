@@ -1,0 +1,11 @@
+.git
+.venv
+.pytest_cache
+__pycache__
+**/__pycache__
+*.pyc
+data/
+dbt_project/logs/
+data-platform-lab/
+.env
+.DS_Store
