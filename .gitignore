@@ -4,6 +4,7 @@ __pycache__/
 .env
 data/raw/
 data/quarantine/
+data/parquet/
 *.parquet
 .DS_Store
 data/real/
@@ -11,3 +12,4 @@ data/raw_10x/
 data/parquet_10x_*/
 data/perf_results_*.json
 scripts/.gemini_cache.json
+data/.embedding_cache.json
