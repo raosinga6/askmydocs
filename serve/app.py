@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
+from serve import matching  # noqa: E402
 from spark_jobs.embeddings_core import (  # noqa: E402
     cosine_top_k,
     l2_normalize,
@@ -119,20 +120,10 @@ def purpose_of(blob: str, max_len: int = 300) -> str:
     return blob[:max_len]
 
 
-def exact_name_mentions(query: str) -> list[int]:
-    """Indices of tables whose exact name appears as a token in the query.
-
-    Semantic embeddings are unreliable for exact identifiers, so a question
-    like "explain orders_base_007" must deterministically include that entry.
-    """
-    import re
-
-    tokens = set(re.findall(r"[a-z][a-z0-9_]{2,}", query.lower()))
-    return [CORPUS.by_name[n] for n in tokens if n in CORPUS.by_name]
-
-
 def retrieve(query: str, top_k: int) -> list[dict]:
-    pinned = exact_name_mentions(query)
+    # Semantic embeddings are unreliable for exact identifiers, so a question
+    # like "explain orders_base_007" must deterministically include that entry.
+    pinned = matching.exact_mentions(query, CORPUS.by_name)
     hits = cosine_top_k(embed_query(query), CORPUS.matrix, top_k)
     # pinned exact-name matches first, then semantic hits (deduped), cap top_k
     ordered = pinned + [i for i, _ in hits if i not in pinned]
@@ -193,19 +184,29 @@ def health() -> dict:
 
 @app.post("/api/search")
 def search(req: SearchRequest) -> dict:
-    return {"query": req.query, "results": retrieve(req.query, req.top_k)}
+    return {
+        "query": req.query,
+        "results": retrieve(req.query, req.top_k),
+        "did_you_mean": matching.did_you_mean(req.query, CORPUS.names, CORPUS.by_name),
+    }
 
 
 @app.post("/api/ask")
 def ask(req: AskRequest) -> dict:
     sources = retrieve(req.question, req.top_k)
+    suggestions = matching.did_you_mean(req.question, CORPUS.names, CORPUS.by_name)
     context = "\n\n---\n\n".join(
         CORPUS.blobs[CORPUS.by_name[s["table_name"]]] for s in sources)
+    prompt = ANSWER_PROMPT.format(question=req.question, context=context)
+    if suggestions:
+        prompt += (
+            "\n\nNote: the question mentions a table name that does not exist in "
+            f"the catalog. Closest table names: {', '.join(suggestions)}."
+        )
     resp = gemini_client().models.generate_content(
-        model=ANSWER_MODEL,
-        contents=ANSWER_PROMPT.format(question=req.question, context=context),
-    )
-    return {"question": req.question, "answer": resp.text, "sources": sources}
+        model=ANSWER_MODEL, contents=prompt)
+    return {"question": req.question, "answer": resp.text,
+            "sources": sources, "did_you_mean": suggestions}
 
 
 @app.get("/api/table/{name}")
