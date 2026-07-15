@@ -1,0 +1,16 @@
+# Spark 3.5.3 with Python and PySpark already installed.
+FROM apache/spark:3.5.3-python3
+
+USER root
+
+WORKDIR /app
+
+# Install Python deps the Spark jobs need.
+COPY pyproject.toml uv.lock* ./
+RUN pip install --no-cache-dir pyyaml jsonschema
+
+# Symlink `python` -> `python3` so `python` works inside the container.
+# The base image only ships python3 by default.
+RUN pip install --no-cache-dir pyspark==3.5.3
+
+USER 185

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Wrapper around docker compose for one-off Spark commands.
+# Usage: ./run python -m spark_jobs.ingest_v1_text_udf
+exec docker compose -f docker/docker-compose.yml run --rm spark "$@"
