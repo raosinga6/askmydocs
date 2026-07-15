@@ -86,8 +86,12 @@ uv run python -m spark_jobs build_embedding_input
 ./run python -m spark_jobs build_embedding_input
 ```
 
-(First `./run` builds the `askmydocs-spark:dev` image; Spark UI at
-`localhost:4040` while a job runs.)
+(First `./run` builds the `askmydocs-spark:dev` image. Note: the Spark UI at
+`localhost:4040` exists **only while a job is running** — these batch jobs
+finish in seconds and the container exits, so don't expect a persistent UI.
+Verify success by the console output and the parquet directories instead.
+If you built the image before the embedding layer landed, rebuild it:
+`docker compose -f docker/docker-compose.yml build`.)
 
 **Verify after `ingest_catalog`** — the console prints the DQ report; expect:
 
