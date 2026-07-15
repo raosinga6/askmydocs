@@ -8,7 +8,7 @@ RAG service over a logistics data dictionary catalog. Production deployment on G
 - **Sources**: real masked dictionaries in `data/real/` + synthetic neighbors in the same shape.
 - **Total**: 500 YAMLs across 10 logistics business domains.
 
-## Day 1 — YAML contract + catalog assembly
+## YAML contract + catalog assembly
 
 - Schema: `schemas/data_dictionary_schema.json` (validated against real masked sample)
 - Topology: `schemas/domain_topology.md`
