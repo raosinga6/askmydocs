@@ -1,0 +1,13 @@
+# Copy to profiles.yml (gitignored) before running dbt.
+data_platform_lab:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: lab
+      password: lab
+      dbname: lab
+      schema: analytics
+      threads: 2

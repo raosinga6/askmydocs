@@ -1,16 +1,24 @@
-# Spark 3.5.3 with Python and PySpark already installed.
-FROM apache/spark:3.5.3-python3
+FROM python:3.11-slim-bookworm
 
-USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openjdk-17-jre-headless \
+        procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Direct path to the OpenJDK 17 install. On amd64 (Windows/Intel Mac) this is
+# java-17-openjdk-amd64; on arm64 (Apple Silicon) it's java-17-openjdk-arm64.
+# The TARGETARCH build arg lets Docker pick the right one automatically.
+ARG TARGETARCH
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${TARGETARCH}
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+RUN pip install --no-cache-dir \
+        pyspark==3.5.3 \
+        pyyaml \
+        jsonschema \
+        pytest \
+        networkx \
+        matplotlib
 
 WORKDIR /app
-
-# Install Python deps the Spark jobs need.
-COPY pyproject.toml uv.lock* ./
-RUN pip install --no-cache-dir pyyaml jsonschema
-
-# Symlink `python` -> `python3` so `python` works inside the container.
-# The base image only ships python3 by default.
-RUN pip install --no-cache-dir pyspark==3.5.3
-
-USER 185

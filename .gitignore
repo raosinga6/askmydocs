@@ -6,6 +6,8 @@ data/raw/
 data/quarantine/
 *.parquet
 .DS_Store
-# Keep data/real/ tracked OR gitignore it depending on confidentiality
 data/real/
-scripts/.gemini_cache.jsonscripts/.gemini_cache.json
+data/raw_10x/
+data/parquet_10x_*/
+data/perf_results_*.json
+scripts/.gemini_cache.json

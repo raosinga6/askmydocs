@@ -1,0 +1,10 @@
+# PLACEHOLDER — deploy Redpanda/Kafka on K8s in Week 11+ (Strimzi or Helm).
+# For now, use docker/docker-compose.yml for Kafka labs.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lab-kafka-readme
+  namespace: data-platform-lab
+data:
+  note: "Replace this stub with Strimzi KafkaTopic + Kafka cluster when ready."

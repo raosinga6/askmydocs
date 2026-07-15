@@ -1,25 +1,26 @@
 """Unit tests for lineage parsers. Run with: uv run pytest tests/test_lineage_parsers.py -v"""
 import pytest
+
 from spark_jobs.lineage_parsers import (
     ParsedSource,
     classify_source_kind,
     parse_input_table,
-    parse_source,
+    parse_source_string,
 )
 
 
 class TestParseSourceString:
     def test_empty_returns_empty(self):
-        assert parse_source(None) == []
-        assert parse_source("") == []
-        assert parse_source("   ") == []
+        assert parse_source_string(None) == []
+        assert parse_source_string("") == []
+        assert parse_source_string("   ") == []
 
     def test_single_column_fqn(self):
-        result = parse_source("core_prod_gl.inbound_scans.hub_id")
+        result = parse_source_string("core_prod_gl.inbound_scans.hub_id")
         assert result == [ParsedSource("core_prod_gl", "inbound_scans", "hub_id")]
 
     def test_single_table_fqn(self):
-        result = parse_source("data_warehouse.hubs_enriched")
+        result = parse_source_string("data_warehouse.hubs_enriched")
         assert result == [ParsedSource("data_warehouse", "hubs_enriched", None)]
 
     def test_real_multi_source_from_masked_yaml(self):
@@ -30,26 +31,26 @@ class TestParseSourceString:
             "data_warehouse.add_to_shipment_events.hub_id, "
             "data_warehouse.hubs_enriched"
         )
-        result = parse_source(source)
+        result = parse_source_string(source)
         assert len(result) == 4
         assert result[0].column == "hub_id"
         assert result[3].column is None  # the bare table reference
 
     def test_digit_leading_namespace(self):
-        result = parse_source("3pl_prod_gl.parcels.id")
+        result = parse_source_string("3pl_prod_gl.parcels.id")
         assert result == [ParsedSource("3pl_prod_gl", "parcels", "id")]
 
     def test_noise_tokens_dropped(self):
         # Real-world: someone wrote prose in the source field
         source = "Direct field from source"
-        assert parse_source(source) == []
+        assert parse_source_string(source) == []
 
     def test_trailing_comma_doesnt_break(self):
-        result = parse_source("a.b.c, d.e.f,")
+        result = parse_source_string("a.b.c, d.e.f,")
         assert len(result) == 2
 
     def test_trailing_dot_stripped(self):
-        result = parse_source("a.b.c.")
+        result = parse_source_string("a.b.c.")
         assert result == [ParsedSource("a", "b", "c")]
 
 

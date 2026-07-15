@@ -43,7 +43,7 @@ SCHEMA = {
             "maxItems": 25,
             "items": {
                 "type": "string",
-                "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+                "pattern": "^[a-z0-9][a-z0-9_]*\\.[a-z0-9][a-z0-9_]*$",
             },
         },
         "fields": {

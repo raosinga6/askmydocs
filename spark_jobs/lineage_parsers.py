@@ -10,31 +10,27 @@ from dataclasses import dataclass
 
 # An FQN is namespace.table[.column], lowercase alphanum + underscores.
 # Allow digit-leading identifiers because real namespaces use them (3pl_prod_gl).
-
-FQN_RE = re.compile(r"^([a-z0-9][a-z0-9_]*)\.([a-z0-9][a-z0-9_]*)(?:\.([a-z0-9][a-z0-9_]*))?$"
+FQN_RE = re.compile(
+    r"^([a-z0-9][a-z0-9_]*)\.([a-z0-9][a-z0-9_]*)(?:\.([a-z0-9][a-z0-9_]*))?$"
 )
+
 
 @dataclass(frozen=True)
 class ParsedSource:
-    """A parsed source, with optional column."""
-
     namespace: str
     table: str
-    column: str | None
+    column: str | None  # None when the source references the whole table
 
     @property
     def table_fqn(self) -> str:
-        """The FQN of the table, without the column."""
         return f"{self.namespace}.{self.table}"
-    
+
     @property
-    def column_fqn(self) -> str | None:
-        """The FQN of the column, if present."""
-        if self.column is None:
-            return None
-        return f"{self.namespace}.{self.table}.{self.column}"
-    
-def parse_source(source: str|None) -> list[ParsedSource]:
+    def column_fqn(self) -> str:
+        return f"{self.namespace}.{self.table}.{self.column}" if self.column else self.table_fqn
+
+
+def parse_source_string(source: str | None) -> list[ParsedSource]:
     """Parse a comma-separated source string into a list of ParsedSource.
 
     Returns an empty list if `source` is None, blank, or contains no valid FQNs.
@@ -43,22 +39,18 @@ def parse_source(source: str|None) -> list[ParsedSource]:
     """
     if not source:
         return []
-    
     out: list[ParsedSource] = []
-
     for raw in source.split(","):
         token = raw.strip().rstrip(".")
         if not token:
             continue
-        
         m = FQN_RE.match(token)
         if not m:
             continue
-        
         ns, tbl, col = m.group(1), m.group(2), m.group(3)
         out.append(ParsedSource(namespace=ns, table=tbl, column=col))
-
     return out
+
 
 def classify_source_kind(technical_description: str | None) -> str:
     """Classify a field as 'direct', 'derived', or 'unknown' based on its tech description."""
@@ -83,7 +75,3 @@ def parse_input_table(token: str | None) -> tuple[str, str] | None:
     if not m:
         return None
     return m.group(1), m.group(2)
-
-
-    
-

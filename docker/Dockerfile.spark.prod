@@ -1,0 +1,90 @@
+# Production image for AskMyDocs Spark jobs.
+# Deployed to GKE in Week 3 via Spark Operator.
+#
+# Key differences from Dockerfile.spark (dev):
+# - Source code COPY'd in, not volume-mounted
+# - Non-root user
+# - No dev tools (pytest, etc.)
+# - Single ENTRYPOINT pointing at the job dispatcher
+# - Multi-stage build to keep the runtime image small
+
+# ---------------------------------------------------------------------------
+# Stage 1: build — install deps, prepare the app
+# ---------------------------------------------------------------------------
+FROM python:3.11-slim-bookworm AS build
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openjdk-17-jre-headless \
+        procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python deps into a virtual env so we can copy a clean tree
+# into the runtime image. Pin versions explicitly.
+COPY requirements.prod.txt /tmp/requirements.prod.txt
+RUN python -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir --upgrade pip && \
+    /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.prod.txt
+
+# ---------------------------------------------------------------------------
+# Stage 2: runtime — minimal final image
+# ---------------------------------------------------------------------------
+FROM python:3.11-slim-bookworm AS runtime
+
+# Reinstall Java in the runtime stage (it's a system package, not pip).
+# We deliberately repeat this because Stage 1 was just for Python.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openjdk-17-jre-headless \
+        procps \
+    && rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
+
+# Copy the prepared venv from the build stage.
+COPY --from=build /opt/venv /opt/venv
+
+# JAVA_HOME — same as dev image. TARGETARCH handles amd64 vs arm64.
+ARG TARGETARCH
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${TARGETARCH}
+ENV PATH=/opt/venv/bin:$JAVA_HOME/bin:$PATH
+
+# Create a non-root user. UID 1001 matches the dev image convention so
+# file ownership is consistent across environments.
+RUN groupadd --system --gid 1001 sparkuser && \
+    useradd --system --uid 1001 --gid sparkuser --shell /bin/bash \
+            --create-home sparkuser
+
+WORKDIR /app
+
+# Copy source code. Order matters for build cache efficiency:
+# rarely-changing files first, frequently-changing files last.
+COPY --chown=sparkuser:sparkuser schemas/ /app/schemas/
+COPY --chown=sparkuser:sparkuser spark_jobs/ /app/spark_jobs/
+
+# Drop privileges. Everything from here runs as sparkuser.
+USER sparkuser
+
+# Production paths — overridable by the Kubernetes manifest.
+ENV ASKMYDOCS_RAW_DIR=/data/raw \
+    ASKMYDOCS_OUT_DIR=/data/parquet \
+    ASKMYDOCS_CATALOG_IN=/data/parquet/catalog \
+    ASKMYDOCS_TABLE_LINEAGE_OUT=/data/parquet/table_lineage \
+    ASKMYDOCS_FIELD_LINEAGE_OUT=/data/parquet/field_lineage \
+    ASKMYDOCS_TABLE_LINEAGE_IN=/data/parquet/table_lineage \
+    ASKMYDOCS_EMBEDDING_OUT=/data/parquet/embedding_input \
+    PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Image metadata — useful for `docker inspect` and supply chain auditing.
+LABEL org.opencontainers.image.title="askmydocs-spark" \
+      org.opencontainers.image.description="AskMyDocs Spark jobs (ingest, lineage, embedding-input)" \
+      org.opencontainers.image.source="https://github.com/raosinga6/askmydocs"
+
+# ENTRYPOINT vs CMD:
+#   ENTRYPOINT is the fixed "command" — python -m spark_jobs
+#   CMD is the default "args" — which job to run, overridable from K8s
+# This means: `docker run <image>` runs ingest_catalog by default.
+#             `docker run <image> extract_lineage` runs extract_lineage.
+ENTRYPOINT ["python", "-m", "spark_jobs"]
+CMD ["ingest_catalog"]

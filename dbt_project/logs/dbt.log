@@ -1,0 +1,30 @@
+[0m23:34:26.731173 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000024BF5DBABD0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000024BF41D9520>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000024BF42D04D0>]}
+
+
+============================== 23:34:27.021288 | 12fd846a-b2ab-4dd8-9508-3ad2da11f272 ==============================
+[0m23:34:27.021288 [info ] [MainThread]: Running with dbt=1.11.11
+[0m23:34:27.022285 [debug] [MainThread]: running dbt with arguments {'static_parser': 'True', 'no_print': 'None', 'version_check': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'target_path': 'None', 'printer_width': '80', 'write_json': 'True', 'empty': 'None', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'log_format': 'default', 'debug': 'False', 'fail_fast': 'False', 'partial_parse': 'True', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'profiles_dir': 'C:\\Users\\koteswara.singamsett\\.dbt', 'use_colors': 'True', 'indirect_selection': 'eager', 'invocation_command': 'dbt init askmydocs', 'use_experimental_parser': 'False', 'log_path': 'logs'}
+[0m23:34:27.180874 [info ] [MainThread]: Creating dbt configuration folder at C:\Users\koteswara.singamsett\.dbt
+[0m23:34:27.190704 [debug] [MainThread]: Starter project path: C:\BI\DWH\proj\askmydocs\.venv\Lib\site-packages\dbt\include\starter_project
+[0m23:34:27.253982 [info ] [MainThread]: 
+Your new dbt project "askmydocs" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m23:34:27.255007 [info ] [MainThread]: Setting up your profile.
+[0m23:36:49.731877 [info ] [MainThread]: Profile askmydocs written to C:\Users\koteswara.singamsett\.dbt\profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m23:36:49.733557 [debug] [MainThread]: Command `dbt init` succeeded at 23:36:49.733557 after 143.29 seconds
+[0m23:36:49.734558 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000024B88547080>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000024B8856AA20>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000024BF43994C0>]}
+[0m23:36:49.735555 [debug] [MainThread]: Flushing usage events
+[0m23:36:50.839701 [debug] [MainThread]: An error was encountered while trying to flush usage events

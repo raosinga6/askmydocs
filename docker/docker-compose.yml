@@ -1,11 +1,3 @@
-# Compose file for local Spark development.
-#
-# `docker compose run spark <command>` executes a one-off container with your
-# project mounted in at /app. Use this for running Spark jobs interactively.
-#
-# `docker compose up spark-ui` starts a long-running container that holds the
-# Spark UI open at http://localhost:4040 while you browse it.
-
 services:
   spark:
     build:
@@ -14,14 +6,11 @@ services:
     image: askmydocs-spark:dev
     working_dir: /app
     volumes:
-      # Project code, mounted live for fast iteration.
       - ..:/app
     environment:
       PYTHONPATH: /app
       PYTHONUNBUFFERED: "1"
-      # Tell Spark to bind to all interfaces so the UI is reachable from the host.
       SPARK_LOCAL_IP: 0.0.0.0
     ports:
-      # Spark UI: container 4040 → host 4040.
       - "4040:4040"
     command: ["bash"]

@@ -22,7 +22,8 @@ random.seed(42)
 Faker.seed(42)
 
 REPO = Path(__file__).resolve().parent.parent
-SCHEMA = json.loads((REPO / "schemas" / "data_dictionary_schema.json").read_text())
+#SCHEMA = json.loads((REPO / "schemas" / "data_dictionary_schema.json").read_text())
+SCHEMA = json.loads((REPO / "schemas" / "data_dictionary_schema.json").read_text(encoding="utf-8"))
 REAL_DIR = REPO / "data" / "real"
 OUT_DIR = REPO / "data" / "raw"
 
@@ -375,9 +376,14 @@ def main() -> None:
         except ValidationError as e:
             failures.append((spec.name, str(e.message)))
             continue
-        (OUT_DIR / f"{spec.name}.yaml").write_text(
+        '''(OUT_DIR / f"{spec.name}.yaml").write_text(
             yaml.safe_dump(doc, sort_keys=False, default_flow_style=False, width=120)
-        )
+        )'''
+
+        (OUT_DIR / f"{spec.name}.yaml").write_text(
+            yaml.safe_dump(doc, sort_keys=False, default_flow_style=False, width=120, allow_unicode=True),
+            encoding="utf-8",
+            )
 
     total = len(list(OUT_DIR.glob("*.yaml")))
     print(f"\nFinal count in {OUT_DIR}: {total}")
